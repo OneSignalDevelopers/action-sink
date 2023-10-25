@@ -1,0 +1,45 @@
+name: ActionSyncR
+
+on: workflow_dispatch
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Clone Action Sync
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          repository: OneSignalDevelopers/action-sink
+          token: ${{ secrets.PAT_TOKEN }}
+          path: _clone/action-sink
+
+      - name: Commit files
+        run: |
+          mkdir -p _clone/action-sink/.github/workflows
+          cp .github/workflows/sync-actions.yml _clone/action-sink/.github/workflows
+          cp .github/release-drafter.yml _clone/action-sink/.github/
+          cd _clone/action-sink
+          git config --local user.email "noreply@onesingal.com"
+          git config --local user.name "SyncR 🤖"
+          git add .
+          git commit -m "Update release drafter"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.PAT_TOKEN }}
+          repository: onesignaldevelopers/action-sink
+          force: true
+          branch: testing
+          directory: _clone/action-sink
+      - name: Run a one-line script
+        run: echo Hello, world!
